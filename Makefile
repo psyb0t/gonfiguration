@@ -33,9 +33,5 @@ test-coverage: ## Run tests with coverage check. Fails if coverage is below the 
 		exit 1; \
 	fi
 
-clean: ## Remove build artifacts
-	@echo "Removing build artifacts..."
-	@rm -rf build
-
 help: ## Display this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
