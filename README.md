@@ -70,4 +70,8 @@ Got some wicked improvements or just found a dumb bug? Open a PR or shoot an iss
 
 ## License
 
-DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE. Seriously, just do what you want.
+Copyright 2023 Ciprian Mandache ([ciprian.51k.eu](https://ciprian.51k.eu))
+
+Listen up! Permission is straight-up given, no strings attached, to any badass out there snagging a copy of this masterpiece (let's call it the "Software"). You can rock out with the Software any damn way you please. Want to use it? Go for it. Modify it? Be my guest. Merge, publish, distribute, sublicense, or even make a quick buck selling it? Hell yeah, you can. Just if you're handing this gem to someone else, don't be a douche – include this copyright notice and my cool permission ramble in all copies or major parts of the Software.
+
+Now, here's the kicker: the Software is provided "as is". I ain't making any pinky promises on how it'll perform or if it might royally screw things up. So, if some shit hits the fan, don't come crying to me or any other folks holding the copyright. We're just chilling and ain't responsible for whatever chaos you or this code might stir up.
