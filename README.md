@@ -10,9 +10,13 @@ go get github.com/psyb0t/gonfiguration
 
 ## Usage
 
+### Environment Variables are Your Best Buds
+
+`gonfiguration` sips config values straight from the environment variables. So make sure you've set those suckers up right.
+
 ### Structuring your Config
 
-Define your configuration struct. This badass package is all about keeping it simple. It only vibes with simple structs that don't piss me off. If your config's looking like a damn novel, maybe it's time to split that project into bite-sized chunks. Oh, and when you slap on those mapstructure tags? Make sure those tag values are UPPERCASE – no whispering allowed here.
+Define your configuration struct. This badass package is all about keeping it simple. It only vibes with simple structs that don't piss me off. If your config's looking like a damn novel, maybe it's time to split that project into bite-sized chunks. And when you're getting jiggy with those mapstructure tags? Make sure those tag values are UPPERCASE – no whispering allowed here. And by the way, those shouty mapstructure tags? They're your env var's alter ego. Get it right!
 
 ```go
 type config struct {
