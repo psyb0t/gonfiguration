@@ -9,6 +9,9 @@ import (
 )
 
 func TestSetDefault(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
 	def := Default{
 		Key:   "test_key",
 		Value: "test_value",
@@ -19,6 +22,9 @@ func TestSetDefault(t *testing.T) {
 }
 
 func TestSetDefaults(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
 	defaults := []Default{
 		{
 			Key:   "key1",
@@ -37,6 +43,9 @@ func TestSetDefaults(t *testing.T) {
 }
 
 func TestIsSimpleType(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
 	testCases := []struct {
 		name     string
 		kind     reflect.Kind
@@ -79,6 +88,9 @@ func TestIsSimpleType(t *testing.T) {
 }
 
 func TestSetNonNilOnNonDefaultedFields(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
 	type config struct {
 		Name    string  `mapstructure:"NAME"`
 		Address string  `mapstructure:"ADDRESS"`

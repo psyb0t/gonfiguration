@@ -6,11 +6,15 @@ import (
 	"time"
 
 	"github.com/psyb0t/gonfiguration"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 )
 
 //nolint:funlen
 func TestParse(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+
 	type SimpleConfig struct {
 		Name   string  `mapstructure:"NAME"`
 		Age    int     `mapstructure:"AGE"`

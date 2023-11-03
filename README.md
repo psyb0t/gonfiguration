@@ -12,7 +12,7 @@ go get github.com/psyb0t/gonfiguration
 
 ### Structuring your Config
 
-Define your configuration struct. Ensure you use `mapstructure` tags because `gonfiguration` takes the good stuff from environment variables, and they must match these tags.
+Define your configuration struct. This badass package is all about keeping it simple. It only vibes with simple structs that don't piss me off. If your config's looking like a damn novel, maybe it's time to split that project into bite-sized chunks. Oh, and when you slap on those mapstructure tags? Make sure those tag values are UPPERCASE – no whispering allowed here.
 
 ```go
 type config struct {
