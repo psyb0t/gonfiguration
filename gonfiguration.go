@@ -23,18 +23,12 @@ func SetDefaults(defaults ...Default) {
 }
 
 func Parse(destination interface{}) error {
-	destValue := reflect.ValueOf(destination)
-	if destValue.Kind() != reflect.Ptr {
-		return ErrTargetNotPointer
+	destValue, err := getDestinationStructValue(destination)
+	if err != nil {
+		return err
 	}
 
-	// Dereferencing to get the actual value and checking if it's a struct.
-	destValue = destValue.Elem()
-	if destValue.Kind() != reflect.Struct {
-		return ErrDestinationNotStruct
-	}
-
-	if err := processSimpleStructFields(destValue); err != nil {
+	if err := setNonNilOnNonDefaultedFields(destValue); err != nil {
 		return err
 	}
 
@@ -45,6 +39,20 @@ func Parse(destination interface{}) error {
 	}
 
 	return nil
+}
+
+func getDestinationStructValue(destination interface{}) (reflect.Value, error) {
+	destValue := reflect.ValueOf(destination)
+	if destValue.Kind() != reflect.Ptr {
+		return reflect.Value{}, ErrTargetNotPointer
+	}
+
+	destValue = destValue.Elem()
+	if destValue.Kind() != reflect.Struct {
+		return reflect.Value{}, ErrDestinationNotStruct
+	}
+
+	return destValue, nil
 }
 
 func isSimpleType(kind reflect.Kind) bool {
@@ -69,7 +77,7 @@ func isSimpleType(kind reflect.Kind) bool {
 	}
 }
 
-func processSimpleStructFields(value reflect.Value) error {
+func setNonNilOnNonDefaultedFields(value reflect.Value) error {
 	for i := 0; i < value.NumField(); i++ {
 		field := value.Type().Field(i)
 		fieldValue := value.Field(i)
