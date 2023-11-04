@@ -37,10 +37,6 @@ func init() {
 	}
 }
 
-func Reset() {
-	gonfig.reset()
-}
-
 func Parse(dst interface{}) error {
 	envVars, err := getEnvVars()
 	if err != nil {
@@ -59,6 +55,27 @@ func Parse(dst interface{}) error {
 	}
 
 	return nil
+}
+
+func GetAllValues() map[string]interface{} {
+	defaults := gonfig.getDefaults()
+	envVars := gonfig.getEnvVars()
+
+	allValues := map[string]interface{}{}
+
+	for key, val := range defaults {
+		allValues[key] = val
+	}
+
+	for key, val := range envVars {
+		allValues[key] = val
+	}
+
+	return allValues
+}
+
+func Reset() {
+	gonfig.reset()
 }
 
 func parseDstFields(dstVal reflect.Value, envVars map[string]string) error {
@@ -177,23 +194,6 @@ func setBool(fieldValue reflect.Value, envVal string) error {
 	fieldValue.SetBool(b)
 
 	return nil
-}
-
-func GetAllValues() map[string]interface{} {
-	defaults := gonfig.getDefaults()
-	envVars := gonfig.getEnvVars()
-
-	allValues := map[string]interface{}{}
-
-	for key, val := range defaults {
-		allValues[key] = val
-	}
-
-	for key, val := range envVars {
-		allValues[key] = val
-	}
-
-	return allValues
 }
 
 func getDstStructValue(dst interface{}) (reflect.Value, error) {

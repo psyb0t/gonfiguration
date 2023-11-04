@@ -1,6 +1,57 @@
 # gonfiguration 🔧
 
-A kickass configuration package built on top of `viper` for Golang. Because, why the hell not? Simplify setting defaults and parsing configurations without the unnecessary bullshit.
+A kickass configuration package for Golang. Because, why the hell not? Simplify setting defaults and setting struct field vals from env vars without the unnecessary bullshit.
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+
+	"github.com/psyb0t/gonfiguration"
+)
+
+type config struct {
+	ListenAddress string `env:"LISTEN_ADDRESS"`
+	DBDSN         string `env:"DB_DSN"`
+	DBName        string `env:"DB_NAME"`
+	DBUser        string `env:"DB_USER"`
+	DBPass        string `env:"DB_PASS"`
+}
+
+func main() {
+	cfg := config{}
+
+	gonfiguration.SetDefaults(map[string]interface{}{
+		"LISTEN_ADDRESS": "127.0.0.1:8080",
+		"DB_DSN":         "postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable",
+	})
+
+	if err := os.Setenv("DB_NAME", "postgres"); err != nil {
+		log.Fatalf("holy fuque! can't set env: %v", err)
+	}
+
+	if err := os.Setenv("DB_USER", "postgres-user"); err != nil {
+		log.Fatalf("holy fuque! can't set env: %v", err)
+	}
+
+	if err := os.Setenv("DB_PASS", "postgres-pass"); err != nil {
+		log.Fatalf("holy fuque! can't set env: %v", err)
+	}
+
+	if err := gonfiguration.Parse(&cfg); err != nil {
+		log.Fatalf("holy fuque! can't parse config: %v", err)
+	}
+
+	fmt.Printf("%+v\n", cfg) //nolint:forbidigo
+	//nolint:lll
+	/* prints
+	{ListenAddress:127.0.0.1:8080 DBDSN:postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable DBName:postgres DBUser:postgres-user DBPass:postgres-pass}
+	*/
+}
+```
 
 ## Installation
 
@@ -10,45 +61,63 @@ go get github.com/psyb0t/gonfiguration
 
 ## Usage
 
-### Environment Variables are Your Best Buds
+Alright, let's break it down:
 
-`gonfiguration` sips config values straight from the environment variables. So make sure you've set those suckers up right.
+### Step 1: Define Your Config Struct
 
-### Structuring your Config
+Define your configuration struct. This badass package is all about keeping it simple. It only vibes with simple structs that don't piss me off. If your config's looking like a damn novel, maybe it's time to split that project into bite-sized chunks. And by the way, those env tags? They're your env var's alter ego. Get it right!
 
-Define your configuration struct. This badass package is all about keeping it simple. It only vibes with simple structs that don't piss me off. If your config's looking like a damn novel, maybe it's time to split that project into bite-sized chunks. And when you're getting jiggy with those mapstructure tags? Make sure those tag values are UPPERCASE – no whispering allowed here. And by the way, those shouty mapstructure tags? They're your env var's alter ego. Get it right!
+Here's a sweet little example:
 
 ```go
-type config struct {
-	LogLevel  level  `mapstructure:"LOG_LEVEL"`
-	LogFormat format `mapstructure:"LOG_FORMAT"`
+type MyAwesomeConfig struct {
+    ListenAddress string `env:"LISTEN_ADDRESS"`
+    DBDSN         string `env:"DB_DSN"`
+    DBName        string `env:"DB_NAME"`
+    DBUser        string `env:"DB_USER"`
+    DBPass        string `env:"DB_PASS"`
 }
 ```
 
-### Set Defaults
+### Step 2: Set Some Defaults (If You're Into That)
+
+You can set defaults that'll make your life easier. They're like your wingman, always there when no one else is:
 
 ```go
-gonfiguration.SetDefaults(
-	configuration.Default{
-		Key:   "LOG_LEVEL",
-		Value: "INFO", // Replace with your default level
-	},
-	configuration.Default{
-		Key:   "LOG_FORMAT",
-		Value: "text", // Replace with your default format
-	},
-)
+gonfiguration.SetDefaults(map[string]interface{}{
+    "LISTEN_ADDRESS": "127.0.0.1:8080",
+    // ... and so on for your other config variables.
+})
 ```
 
-### Parse Configurations
+### Step 3: Parse It Like You Mean It
 
-Parsing is a piece of cake. But for god's sake, handle those errors:
+Make `gonfiguration` work for you. Tell it to grab those env vars and slap 'em into your config struct:
 
 ```go
-c := config{}
-if err := gonfiguration.Parse(&c); err != nil {
-	panic("Damn! Couldn't parse the log config.")
+cfg := MyAwesomeConfig{}
+if err := gonfiguration.Parse(&cfg); err != nil {
+    log.Fatalf("whoa there, partner! can't parse config: %v", err)
 }
+```
+
+And BAM! Your app's environment is now fresher than a mint garden.
+
+### Step 4: (Optional) Get All Values Because You're Nosy
+
+Just wanna see all the values? We got you:
+
+```go
+allTheSecrets := gonfiguration.GetAllValues()
+// Now go forth and spill those beans.
+```
+
+### Step 5: Hit The Reset Button When You Wanna Start Over
+
+Overdid it? Call in a mulligan and reset those defaults and env vars:
+
+```go
+gonfiguration.Reset()
 ```
 
 ## Development
