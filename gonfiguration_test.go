@@ -6,37 +6,37 @@ import (
 	"time"
 
 	"github.com/psyb0t/gonfiguration"
-	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 )
 
 //nolint:funlen
 func TestParse(t *testing.T) {
-	viper.Reset()
-	defer viper.Reset()
-
 	type SimpleConfig struct {
-		Name   string  `mapstructure:"NAME"`
-		Age    int     `mapstructure:"AGE"`
-		Active bool    `mapstructure:"ACTIVE"`
-		Height float64 `mapstructure:"HEIGHT"`
+		Name       string  `env:"NAME"`
+		Age        int     `env:"AGE"`
+		Active     bool    `env:"ACTIVE"`
+		Height     float64 `env:"HEIGHT"`
+		IsDead     bool    `env:"IS_DEAD"`
+		OtherField string  `mapstructure:"OTHER_FIELD"`
+	}
+
+	type ComplexConfigInfo struct {
+		Age    int
+		Height float64
 	}
 
 	type ComplexConfig struct {
-		Name string `mapstructure:"NAME"`
-		Info struct {
-			Age    int
-			Height float64
-		}
+		Name string            `env:"NAME"`
+		Info ComplexConfigInfo `env:"CUQUE"`
 	}
 
 	type PtrFieldConfig struct {
-		Name *string `mapstructure:"NAME"`
-		Age  *int    `mapstructure:"AGE"`
+		Name *string `env:"NAME"`
+		Age  *int    `env:"AGE"`
 	}
 
 	type TimeFieldConfig struct {
-		Birthday time.Time `mapstructure:"BIRTHDAY"`
+		Birthday time.Time `env:"BIRTHDAY"`
 	}
 
 	nonStructConfig := "notastruct"
@@ -53,16 +53,19 @@ func TestParse(t *testing.T) {
 			name:  "simple config vals from defaults",
 			input: &SimpleConfig{},
 			defaultConfig: map[string]interface{}{
-				"NAME":   "cuc",
-				"AGE":    79,
-				"ACTIVE": false,
-				"HEIGHT": 10.1,
+				"NAME":        "cuc",
+				"AGE":         79,
+				"ACTIVE":      true,
+				"HEIGHT":      10.1,
+				"IS_DEAD":     true,
+				"OTHER_FIELD": "caras",
 			},
 			expected: &SimpleConfig{
 				Name:   "cuc",
 				Age:    79,
-				Active: false,
+				Active: true,
 				Height: 10.1,
+				IsDead: true,
 			},
 			expectError: false,
 		},
@@ -70,15 +73,16 @@ func TestParse(t *testing.T) {
 			name:  "simple config vals from env",
 			input: &SimpleConfig{},
 			envConfig: map[string]interface{}{
-				"NAME":   "cuc",
-				"AGE":    79,
-				"ACTIVE": false,
-				"HEIGHT": 10.1,
+				"NAME":        "cuc",
+				"AGE":         79,
+				"ACTIVE":      true,
+				"HEIGHT":      10.1,
+				"OTHER_FIELD": "gibelio",
 			},
 			expected: &SimpleConfig{
 				Name:   "cuc",
 				Age:    79,
-				Active: false,
+				Active: true,
 				Height: 10.1,
 			},
 			expectError: false,
@@ -135,23 +139,30 @@ func TestParse(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			defer gonfiguration.Reset()
+
 			for key, value := range tc.defaultConfig {
-				gonfiguration.SetDefault(gonfiguration.Default{Key: key, Value: value})
+				gonfiguration.SetDefault(key, value)
 			}
 
 			for key, value := range tc.envConfig {
+				t.Logf("setting env var: %s=%v", key, value)
 				t.Setenv(key, fmt.Sprintf("%v", value))
+			}
+
+			for k, v := range gonfiguration.GetAllValues() {
+				t.Logf("%s=%v", k, v)
 			}
 
 			err := gonfiguration.Parse(tc.input)
 
 			if tc.expectError {
-				require.Error(t, err)
+				require.NotNil(t, err)
 
 				return
 			}
 
-			require.NoError(t, err)
+			require.Nil(t, err)
 			require.Equal(t, tc.expected, tc.input)
 		})
 	}
