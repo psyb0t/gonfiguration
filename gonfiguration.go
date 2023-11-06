@@ -8,22 +8,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-type gonfiguration struct {
-	sync.RWMutex
-	defaults map[string]interface{}
-	envVars  map[string]string
-}
-
-func (g *gonfiguration) reset() {
-	g.Lock()
-	defer g.Unlock()
-
-	gonfig = &gonfiguration{
-		defaults: map[string]interface{}{},
-		envVars:  map[string]string{},
-	}
-}
-
 //nolint:gochecknoglobals
 var gonfig *gonfiguration
 
@@ -76,6 +60,22 @@ func GetAllValues() map[string]interface{} {
 
 func Reset() {
 	gonfig.reset()
+}
+
+type gonfiguration struct {
+	sync.RWMutex
+	defaults map[string]interface{}
+	envVars  map[string]string
+}
+
+func (g *gonfiguration) reset() {
+	g.Lock()
+	defer g.Unlock()
+
+	gonfig = &gonfiguration{
+		defaults: map[string]interface{}{},
+		envVars:  map[string]string{},
+	}
 }
 
 func parseDstFields(dstVal reflect.Value, envVars map[string]string) error {

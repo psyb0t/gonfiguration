@@ -108,7 +108,6 @@ linters-settings:
           - github.com/sirupsen/logrus
           - github.com/pkg/errors
           - github.com/stretchr/testify
-          - github.com/spf13/viper
 
 issues:
   include:
