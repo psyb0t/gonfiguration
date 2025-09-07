@@ -46,10 +46,6 @@ func main() {
 	}
 
 	fmt.Printf("%+v\n", cfg) //nolint:forbidigo
-	//nolint:lll
-	/* prints
-	{ListenAddress:127.0.0.1:8080 DBDSN:postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable DBName:postgres DBUser:postgres-user DBPass:postgres-pass}
-	*/
 }
 ```
 
