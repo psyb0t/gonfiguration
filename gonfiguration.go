@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -87,7 +88,7 @@ func parseDstFields(dstVal reflect.Value, envVars map[string]string) error {
 		}
 
 		fieldValue := dstVal.Field(i)
-		if !isSupportedType(fieldValue.Kind()) {
+		if !isSupportedType(fieldValue) {
 			return errors.New("wtf.. Type not supported")
 		}
 
@@ -128,6 +129,11 @@ func setDefaultValue(fieldValue reflect.Value, tag string) error {
 }
 
 func setEnvVarValue(fieldValue reflect.Value, envVal string) error {
+	// Handle time.Duration specifically since it has underlying type int64
+	if fieldValue.Type() == reflect.TypeOf(time.Duration(0)) {
+		return setDuration(fieldValue, envVal)
+	}
+
 	switch fieldValue.Kind() { //nolint:exhaustive
 	case reflect.String:
 		fieldValue.SetString(envVal)
@@ -195,6 +201,17 @@ func setBool(fieldValue reflect.Value, envVal string) error {
 	return nil
 }
 
+func setDuration(fieldValue reflect.Value, envVal string) error {
+	d, err := time.ParseDuration(envVal)
+	if err != nil {
+		return errors.Wrap(err, "wtf.. Failed to parse duration")
+	}
+
+	fieldValue.Set(reflect.ValueOf(d))
+
+	return nil
+}
+
 func getDstStructValue(dst any) (reflect.Value, error) {
 	val := reflect.ValueOf(dst)
 	if val.Kind() != reflect.Ptr {
@@ -209,8 +226,13 @@ func getDstStructValue(dst any) (reflect.Value, error) {
 	return val, nil
 }
 
-func isSupportedType(kind reflect.Kind) bool {
-	switch kind { //nolint:exhaustive
+func isSupportedType(fieldValue reflect.Value) bool {
+	// Handle time.Duration specifically
+	if fieldValue.Type() == reflect.TypeOf(time.Duration(0)) {
+		return true
+	}
+
+	switch fieldValue.Kind() { //nolint:exhaustive
 	case reflect.String,
 		reflect.Int,
 		reflect.Int8,

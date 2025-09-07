@@ -40,6 +40,11 @@ func TestParse(t *testing.T) {
 		Birthday time.Time `env:"BIRTHDAY"`
 	}
 
+	type DurationFieldConfig struct {
+		Timeout    time.Duration `env:"TIMEOUT"`
+		RetryDelay time.Duration `env:"RETRY_DELAY"`
+	}
+
 	nonStructConfig := "notastruct"
 
 	testCases := []struct {
@@ -108,6 +113,36 @@ func TestParse(t *testing.T) {
 				Age:    22,
 				Active: true,
 				Height: 5.4,
+			},
+			expectError: false,
+		},
+		{
+			name:  "duration config with defaults and env vars",
+			input: &DurationFieldConfig{},
+			defaultConfig: map[string]any{
+				"TIMEOUT":     30 * time.Second,
+				"RETRY_DELAY": time.Minute,
+			},
+			envConfig: map[string]any{
+				"TIMEOUT":     "45s",
+				"RETRY_DELAY": "2m30s",
+			},
+			expected: &DurationFieldConfig{
+				Timeout:    45 * time.Second,
+				RetryDelay: 2*time.Minute + 30*time.Second,
+			},
+			expectError: false,
+		},
+		{
+			name:  "duration config with only env vars",
+			input: &DurationFieldConfig{},
+			envConfig: map[string]any{
+				"TIMEOUT":     "1h",
+				"RETRY_DELAY": "500ms",
+			},
+			expected: &DurationFieldConfig{
+				Timeout:    time.Hour,
+				RetryDelay: 500 * time.Millisecond,
 			},
 			expectError: false,
 		},

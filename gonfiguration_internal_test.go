@@ -3,6 +3,7 @@ package gonfiguration
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -88,39 +89,39 @@ func TestSetEnvVarValueUnsupportedType(t *testing.T) {
 }
 
 func TestIsSupportedType(t *testing.T) {
-	supportedTypes := []reflect.Kind{
-		reflect.String,
-		reflect.Int,
-		reflect.Int8,
-		reflect.Int16,
-		reflect.Int32,
-		reflect.Int64,
-		reflect.Uint,
-		reflect.Uint8,
-		reflect.Uint16,
-		reflect.Uint32,
-		reflect.Uint64,
-		reflect.Float32,
-		reflect.Float64,
-		reflect.Bool,
+	supportedTypes := []reflect.Value{
+		reflect.ValueOf(""),
+		reflect.ValueOf(int(0)),
+		reflect.ValueOf(int8(0)),
+		reflect.ValueOf(int16(0)),
+		reflect.ValueOf(int32(0)),
+		reflect.ValueOf(int64(0)),
+		reflect.ValueOf(uint(0)),
+		reflect.ValueOf(uint8(0)),
+		reflect.ValueOf(uint16(0)),
+		reflect.ValueOf(uint32(0)),
+		reflect.ValueOf(uint64(0)),
+		reflect.ValueOf(float32(0)),
+		reflect.ValueOf(float64(0)),
+		reflect.ValueOf(false),
+		reflect.ValueOf(time.Duration(0)), // Add time.Duration test
 	}
 
-	for _, kind := range supportedTypes {
-		require.True(t, isSupportedType(kind), "Expected %v to be supported", kind)
+	for _, val := range supportedTypes {
+		require.True(t, isSupportedType(val), "Expected %v to be supported", val.Type())
 	}
 
-	unsupportedTypes := []reflect.Kind{
-		reflect.Map,
-		reflect.Slice,
-		reflect.Array,
-		reflect.Struct,
-		reflect.Ptr,
-		reflect.Interface,
-		reflect.Chan,
-		reflect.Func,
+	unsupportedTypes := []reflect.Value{
+		reflect.ValueOf(make(map[string]string)),
+		reflect.ValueOf([]string{}),
+		reflect.ValueOf([1]string{}),
+		reflect.ValueOf(struct{}{}),
+		reflect.ValueOf(&struct{}{}),
+		reflect.ValueOf(make(chan int)),
+		reflect.ValueOf(func() {}),
 	}
 
-	for _, kind := range unsupportedTypes {
-		require.False(t, isSupportedType(kind), "Expected %v to be unsupported", kind)
+	for _, val := range unsupportedTypes {
+		require.False(t, isSupportedType(val), "Expected %v to be unsupported", val.Type())
 	}
 }
