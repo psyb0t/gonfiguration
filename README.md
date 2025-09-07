@@ -139,7 +139,7 @@ Got some wicked improvements or just found a dumb bug? Open a PR or shoot an iss
 
 ## License
 
-Copyright 2023 Ciprian Mandache ([ciprian.51k.eu](https://ciprian.51k.eu))
+Copyright 2023-2025 Ciprian Mandache ([ciprian.51k.eu](https://ciprian.51k.eu))
 
 Listen up! Permission is straight-up given, no strings attached, to any badass out there snagging a copy of this masterpiece (let's call it the "Software"). You can rock out with the Software any damn way you please. Want to use it? Go for it. Modify it? Be my guest. Merge, publish, distribute, sublicense, or even make a quick buck selling it? Hell yeah, you can. Just if you're handing this gem to someone else, don't be a douche – include this copyright notice and my cool permission ramble in all copies or major parts of the Software.
 
