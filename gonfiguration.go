@@ -1,6 +1,7 @@
 package gonfiguration
 
 import (
+	"maps"
 	"reflect"
 	"strconv"
 	"sync"
@@ -15,13 +16,13 @@ var gonfig *gonfiguration
 func init() {
 	if gonfig == nil {
 		gonfig = &gonfiguration{
-			defaults: map[string]interface{}{},
+			defaults: map[string]any{},
 			envVars:  map[string]string{},
 		}
 	}
 }
 
-func Parse(dst interface{}) error {
+func Parse(dst any) error {
 	envVars, err := getEnvVars()
 	if err != nil {
 		return errors.Wrap(err, "wtf.. Parse can't get env vars")
@@ -41,15 +42,13 @@ func Parse(dst interface{}) error {
 	return nil
 }
 
-func GetAllValues() map[string]interface{} {
+func GetAllValues() map[string]any {
 	defaults := gonfig.getDefaults()
 	envVars := gonfig.getEnvVars()
 
-	allValues := map[string]interface{}{}
+	allValues := map[string]any{}
 
-	for key, val := range defaults {
-		allValues[key] = val
-	}
+	maps.Copy(allValues, defaults)
 
 	for key, val := range envVars {
 		allValues[key] = val
@@ -64,7 +63,7 @@ func Reset() {
 
 type gonfiguration struct {
 	sync.RWMutex
-	defaults map[string]interface{}
+	defaults map[string]any
 	envVars  map[string]string
 }
 
@@ -73,7 +72,7 @@ func (g *gonfiguration) reset() {
 	defer g.Unlock()
 
 	gonfig = &gonfiguration{
-		defaults: map[string]interface{}{},
+		defaults: map[string]any{},
 		envVars:  map[string]string{},
 	}
 }
@@ -196,7 +195,7 @@ func setBool(fieldValue reflect.Value, envVal string) error {
 	return nil
 }
 
-func getDstStructValue(dst interface{}) (reflect.Value, error) {
+func getDstStructValue(dst any) (reflect.Value, error) {
 	val := reflect.ValueOf(dst)
 	if val.Kind() != reflect.Ptr {
 		return reflect.Value{}, ErrTargetNotPointer

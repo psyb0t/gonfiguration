@@ -1,25 +1,30 @@
-MODULE_NAME := "github.com/psyb0t/gonfiguration"
-PKG_LIST := $(shell go list ${MODULE_NAME}/...)
-MIN_TEST_COVERAGE := 80
+MIN_TEST_COVERAGE := 90
 
 all: dep lint test ## Run dep, lint and test
 
 dep: ## Get project dependencies
 	@echo "Getting project dependencies..."
 	@go mod tidy
+	@go mod vendor
 
 lint: ## Lint all Golang files
-	@echo "Linting all Golang files..."
-	@golangci-lint run --timeout=30m0s
+	@echo "Linting all Go files..."
+	@go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test ./...
+	@go tool golangci-lint run --timeout=30m0s ./...
+
+lint-fix: ## Lint all Golang files and fix
+	@echo "Linting all Go files..."
+	@go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -fix -test ./...
+	@go tool golangci-lint run --fix --timeout=30m0s ./...
 
 test: ## Run all tests
 	@echo "Running all tests..."
-	@go test -race $(PKG_LIST)
+	@go test -race ./...
 
 test-coverage: ## Run tests with coverage check. Fails if coverage is below the threshold.
 	@echo "Running tests with coverage check..."
 	@trap 'rm -f coverage.txt' EXIT; \
-	go test -race -coverprofile=coverage.txt $(PKG_LIST); \
+	go test -race -coverprofile=coverage.txt ./...; \
 	if [ $$? -ne 0 ]; then \
 		echo "Test failed. Exiting."; \
 		exit 1; \
