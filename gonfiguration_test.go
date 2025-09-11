@@ -235,15 +235,15 @@ func TestGetEnvVars(t *testing.T) {
 	defer gonfiguration.Reset()
 
 	t.Setenv("TEST_ENV_VAR", "test_value")
-	
+
 	type TestConfig struct {
 		TestValue string `env:"TEST_ENV_VAR"`
 	}
-	
+
 	config := &TestConfig{}
 	err := gonfiguration.Parse(config)
 	require.NoError(t, err)
-	
+
 	envVars := gonfiguration.GetEnvVars()
 	require.Equal(t, "test_value", envVars["TEST_ENV_VAR"])
 }
@@ -318,9 +318,9 @@ func TestParseErrorCases(t *testing.T) {
 	defer gonfiguration.Reset()
 
 	testCases := []struct {
-		name    string
-		envVars map[string]string
-		config  any
+		name          string
+		envVars       map[string]string
+		config        any
 		errorContains string
 	}{
 		{
@@ -381,23 +381,23 @@ func TestGetAllValuesWithDefaultsAndEnvVars(t *testing.T) {
 	defer gonfiguration.Reset()
 
 	gonfiguration.SetDefault("DEFAULT_KEY", "default_value")
-	
+
 	t.Setenv("ENV_KEY", "env_value")
 	t.Setenv("SHARED_KEY", "env_overrides_default")
-	
+
 	gonfiguration.SetDefault("SHARED_KEY", "default_value")
 
 	type TestConfig struct {
 		EnvKey    string `env:"ENV_KEY"`
 		SharedKey string `env:"SHARED_KEY"`
 	}
-	
+
 	config := &TestConfig{}
 	err := gonfiguration.Parse(config)
 	require.NoError(t, err)
 
 	allValues := gonfiguration.GetAllValues()
-	
+
 	require.Equal(t, "default_value", allValues["DEFAULT_KEY"])
 	require.Equal(t, "env_value", allValues["ENV_KEY"])
 	require.Equal(t, "env_overrides_default", allValues["SHARED_KEY"])
@@ -420,7 +420,7 @@ func TestDefaultValueTypeMismatch(t *testing.T) {
 
 func TestInvalidEnvVariable(t *testing.T) {
 	defer gonfiguration.Reset()
-	
+
 	originalEnv := os.Environ()
 	defer func() {
 		os.Clearenv()
@@ -433,7 +433,7 @@ func TestInvalidEnvVariable(t *testing.T) {
 
 	os.Clearenv()
 	os.Setenv("VALID_KEY", "valid_value")
-	
+
 	type SimpleConfig struct {
 		ValidKey string `env:"VALID_KEY"`
 	}
@@ -476,7 +476,7 @@ func TestTimeDurationDefaults(t *testing.T) {
 	}
 
 	// Set time.Duration defaults
-	gonfiguration.SetDefaults(map[string]interface{}{
+	gonfiguration.SetDefaults(map[string]any{
 		"TIMEOUT":     30 * time.Second,
 		"RETRY_DELAY": 5 * time.Minute,
 	})
@@ -509,7 +509,7 @@ func TestStringSliceDefaults(t *testing.T) {
 	}
 
 	// Set []string defaults
-	gonfiguration.SetDefaults(map[string]interface{}{
+	gonfiguration.SetDefaults(map[string]any{
 		"TAGS":     []string{"default", "production"},
 		"FEATURES": []string{"auth", "logging"},
 	})
@@ -570,7 +570,7 @@ func TestConcurrentAccess(t *testing.T) {
 	}
 
 	// Set some initial defaults
-	gonfiguration.SetDefaults(map[string]interface{}{
+	gonfiguration.SetDefaults(map[string]any{
 		"VALUE1": "default1",
 		"VALUE2": 42,
 		"VALUE3": false,
@@ -588,7 +588,7 @@ func TestConcurrentAccess(t *testing.T) {
 		var wg sync.WaitGroup
 		results := make([]ConcurrentConfig, numGoroutines)
 
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(index int) {
 				defer wg.Done()
@@ -615,11 +615,11 @@ func TestConcurrentAccess(t *testing.T) {
 	t.Run("ConcurrentSetDefaults", func(t *testing.T) {
 		var wg sync.WaitGroup
 
-		for i := 0; i < numGoroutines; i++ {
+		for i := range numGoroutines {
 			wg.Add(1)
 			go func(index int) {
 				defer wg.Done()
-				for j := 0; j < numOperations; j++ {
+				for j := range numOperations {
 					key := fmt.Sprintf("CONCURRENT_KEY_%d_%d", index, j)
 					value := fmt.Sprintf("value_%d_%d", index, j)
 					gonfiguration.SetDefault(key, value)
@@ -631,8 +631,8 @@ func TestConcurrentAccess(t *testing.T) {
 
 		// Verify all defaults were set correctly
 		defaults := gonfiguration.GetDefaults()
-		for i := 0; i < numGoroutines; i++ {
-			for j := 0; j < numOperations; j++ {
+		for i := range numGoroutines {
+			for j := range numOperations {
 				key := fmt.Sprintf("CONCURRENT_KEY_%d_%d", i, j)
 				expectedValue := fmt.Sprintf("value_%d_%d", i, j)
 				actualValue, exists := defaults[key]
@@ -653,7 +653,7 @@ func TestConcurrentAccess(t *testing.T) {
 		var wg sync.WaitGroup
 
 		// Concurrent Parse operations
-		for i := 0; i < numGoroutines/2; i++ {
+		for range numGoroutines / 2 {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -664,7 +664,7 @@ func TestConcurrentAccess(t *testing.T) {
 		}
 
 		// Concurrent GetAllValues operations
-		for i := 0; i < numGoroutines/4; i++ {
+		for range numGoroutines / 4 {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -674,7 +674,7 @@ func TestConcurrentAccess(t *testing.T) {
 		}
 
 		// Concurrent GetDefaults operations
-		for i := 0; i < numGoroutines/4; i++ {
+		for range numGoroutines / 4 {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
