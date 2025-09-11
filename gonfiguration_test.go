@@ -3,6 +3,7 @@ package gonfiguration_test
 import (
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -464,4 +465,224 @@ func splitEnvVar(env string) (key, val string, found bool) {
 		}
 	}
 	return "", "", false
+}
+
+func TestTimeDurationDefaults(t *testing.T) {
+	defer gonfiguration.Reset()
+
+	type TimingConfig struct {
+		Timeout    time.Duration `env:"TIMEOUT"`
+		RetryDelay time.Duration `env:"RETRY_DELAY"`
+	}
+
+	// Set time.Duration defaults
+	gonfiguration.SetDefaults(map[string]interface{}{
+		"TIMEOUT":     30 * time.Second,
+		"RETRY_DELAY": 5 * time.Minute,
+	})
+
+	cfg := TimingConfig{}
+	require.NoError(t, gonfiguration.Parse(&cfg))
+
+	// Should use defaults
+	require.Equal(t, 30*time.Second, cfg.Timeout)
+	require.Equal(t, 5*time.Minute, cfg.RetryDelay)
+
+	// Override with env vars (string format)
+	t.Setenv("TIMEOUT", "1m30s")
+	t.Setenv("RETRY_DELAY", "2h")
+
+	cfg2 := TimingConfig{}
+	require.NoError(t, gonfiguration.Parse(&cfg2))
+
+	// Should use env var values
+	require.Equal(t, 1*time.Minute+30*time.Second, cfg2.Timeout)
+	require.Equal(t, 2*time.Hour, cfg2.RetryDelay)
+}
+
+func TestStringSliceDefaults(t *testing.T) {
+	defer gonfiguration.Reset()
+
+	type SliceConfig struct {
+		Tags     []string `env:"TAGS"`
+		Features []string `env:"FEATURES"`
+	}
+
+	// Set []string defaults
+	gonfiguration.SetDefaults(map[string]interface{}{
+		"TAGS":     []string{"default", "production"},
+		"FEATURES": []string{"auth", "logging"},
+	})
+
+	cfg := SliceConfig{}
+	require.NoError(t, gonfiguration.Parse(&cfg))
+
+	// Should use defaults
+	require.Equal(t, []string{"default", "production"}, cfg.Tags)
+	require.Equal(t, []string{"auth", "logging"}, cfg.Features)
+
+	// Override with env vars (comma-separated format)
+	t.Setenv("TAGS", "test,staging,prod")
+	t.Setenv("FEATURES", "auth, metrics , caching")
+
+	cfg2 := SliceConfig{}
+	require.NoError(t, gonfiguration.Parse(&cfg2))
+
+	// Should use env var values (with whitespace trimmed)
+	require.Equal(t, []string{"test", "staging", "prod"}, cfg2.Tags)
+	require.Equal(t, []string{"auth", "metrics", "caching"}, cfg2.Features)
+}
+
+func TestParseStringSlice(t *testing.T) {
+	type StringSliceConfig struct {
+		Tags     []string `env:"TAGS"`
+		Features []string `env:"FEATURES"`
+		Empty    []string `env:"EMPTY"`
+	}
+
+	gonfiguration.Reset()
+
+	// Set environment variables
+	t.Setenv("TAGS", "go,rust,python")
+	t.Setenv("FEATURES", "feature1, feature2 , feature3")
+	t.Setenv("EMPTY", "")
+
+	cfg := StringSliceConfig{}
+	require.NoError(t, gonfiguration.Parse(&cfg))
+
+	// Test comma-separated values
+	require.Equal(t, []string{"go", "rust", "python"}, cfg.Tags)
+
+	// Test comma-separated values with spaces (should be trimmed)
+	require.Equal(t, []string{"feature1", "feature2", "feature3"}, cfg.Features)
+
+	// Test empty string (should result in empty slice)
+	require.Equal(t, []string{}, cfg.Empty)
+}
+
+func TestConcurrentAccess(t *testing.T) {
+	defer gonfiguration.Reset()
+
+	type ConcurrentConfig struct {
+		Value1 string `env:"VALUE1"`
+		Value2 int    `env:"VALUE2"`
+		Value3 bool   `env:"VALUE3"`
+	}
+
+	// Set some initial defaults
+	gonfiguration.SetDefaults(map[string]interface{}{
+		"VALUE1": "default1",
+		"VALUE2": 42,
+		"VALUE3": false,
+	})
+
+	const numGoroutines = 50
+	const numOperations = 100
+
+	// Test concurrent Parse operations
+	t.Run("ConcurrentParse", func(t *testing.T) {
+		t.Setenv("VALUE1", "test")
+		t.Setenv("VALUE2", "123")
+		t.Setenv("VALUE3", "true")
+
+		var wg sync.WaitGroup
+		results := make([]ConcurrentConfig, numGoroutines)
+
+		for i := 0; i < numGoroutines; i++ {
+			wg.Add(1)
+			go func(index int) {
+				defer wg.Done()
+				cfg := ConcurrentConfig{}
+				require.NoError(t, gonfiguration.Parse(&cfg))
+				results[index] = cfg
+			}(i)
+		}
+
+		wg.Wait()
+
+		// All results should be identical
+		expected := ConcurrentConfig{
+			Value1: "test",
+			Value2: 123,
+			Value3: true,
+		}
+		for i, result := range results {
+			require.Equal(t, expected, result, "goroutine %d result mismatch", i)
+		}
+	})
+
+	// Test concurrent SetDefault operations
+	t.Run("ConcurrentSetDefaults", func(t *testing.T) {
+		var wg sync.WaitGroup
+
+		for i := 0; i < numGoroutines; i++ {
+			wg.Add(1)
+			go func(index int) {
+				defer wg.Done()
+				for j := 0; j < numOperations; j++ {
+					key := fmt.Sprintf("CONCURRENT_KEY_%d_%d", index, j)
+					value := fmt.Sprintf("value_%d_%d", index, j)
+					gonfiguration.SetDefault(key, value)
+				}
+			}(i)
+		}
+
+		wg.Wait()
+
+		// Verify all defaults were set correctly
+		defaults := gonfiguration.GetDefaults()
+		for i := 0; i < numGoroutines; i++ {
+			for j := 0; j < numOperations; j++ {
+				key := fmt.Sprintf("CONCURRENT_KEY_%d_%d", i, j)
+				expectedValue := fmt.Sprintf("value_%d_%d", i, j)
+				actualValue, exists := defaults[key]
+				require.True(t, exists, "key %s should exist", key)
+				require.Equal(t, expectedValue, actualValue, "value mismatch for key %s", key)
+			}
+		}
+	})
+
+	// Test concurrent mixed operations
+	t.Run("ConcurrentMixedOperations", func(t *testing.T) {
+		t.Setenv("MIXED_VALUE", "env_value")
+
+		type MixedConfig struct {
+			MixedValue string `env:"MIXED_VALUE"`
+		}
+
+		var wg sync.WaitGroup
+
+		// Concurrent Parse operations
+		for i := 0; i < numGoroutines/2; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				cfg := MixedConfig{}
+				require.NoError(t, gonfiguration.Parse(&cfg))
+				require.Equal(t, "env_value", cfg.MixedValue)
+			}()
+		}
+
+		// Concurrent GetAllValues operations
+		for i := 0; i < numGoroutines/4; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				values := gonfiguration.GetAllValues()
+				require.NotNil(t, values)
+			}()
+		}
+
+		// Concurrent GetDefaults operations
+		for i := 0; i < numGoroutines/4; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				defaults := gonfiguration.GetDefaults()
+				require.NotNil(t, defaults)
+			}()
+		}
+
+		wg.Wait()
+	})
 }

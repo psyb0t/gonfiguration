@@ -105,6 +105,7 @@ func TestIsSupportedType(t *testing.T) {
 		reflect.ValueOf(float64(0)),
 		reflect.ValueOf(false),
 		reflect.ValueOf(time.Duration(0)), // Add time.Duration test
+		reflect.ValueOf([]string{}),       // Add []string test
 	}
 
 	for _, val := range supportedTypes {
@@ -113,7 +114,6 @@ func TestIsSupportedType(t *testing.T) {
 
 	unsupportedTypes := []reflect.Value{
 		reflect.ValueOf(make(map[string]string)),
-		reflect.ValueOf([]string{}),
 		reflect.ValueOf([1]string{}),
 		reflect.ValueOf(struct{}{}),
 		reflect.ValueOf(&struct{}{}),
