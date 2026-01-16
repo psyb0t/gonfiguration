@@ -646,33 +646,27 @@ func TestConcurrentAccess(t *testing.T) {
 
 		// Concurrent Parse operations
 		for range numGoroutines / 2 {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				cfg := MixedConfig{}
 				require.NoError(t, gonfiguration.Parse(&cfg))
 				require.Equal(t, "env_value", cfg.MixedValue)
-			}()
+			})
 		}
 
 		// Concurrent GetAllValues operations
 		for range numGoroutines / 4 {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				values := gonfiguration.GetAllValues()
 				require.NotNil(t, values)
-			}()
+			})
 		}
 
 		// Concurrent GetDefaults operations
 		for range numGoroutines / 4 {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				defaults := gonfiguration.GetDefaults()
 				require.NotNil(t, defaults)
-			}()
+			})
 		}
 
 		wg.Wait()
