@@ -172,6 +172,11 @@ func TestParse(t *testing.T) {
 			input:       &nonStructConfig,
 			expectError: true,
 		},
+		{
+			name:        "nil dest",
+			input:       nil,
+			expectError: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -315,59 +320,38 @@ func TestParseWithBoolValues(t *testing.T) {
 }
 
 func TestParseErrorCases(t *testing.T) {
-	defer gonfiguration.Reset()
+	t.Run("invalid uint", func(t *testing.T) {
+		defer gonfiguration.Reset()
+		t.Setenv("UINT_VAL", "invalid")
 
-	testCases := []struct {
-		name          string
-		envVars       map[string]string
-		config        any
-		errorContains string
-	}{
-		{
-			name: "invalid uint",
-			envVars: map[string]string{
-				"UINT_VAL": "invalid",
-			},
-			config: &struct {
-				UintVal uint `env:"UINT_VAL"`
-			}{},
-			errorContains: "Failed to parse uint",
-		},
-		{
-			name: "invalid float",
-			envVars: map[string]string{
-				"FLOAT_VAL": "invalid",
-			},
-			config: &struct {
-				FloatVal float64 `env:"FLOAT_VAL"`
-			}{},
-			errorContains: "Failed to parse float",
-		},
-		{
-			name: "invalid bool",
-			envVars: map[string]string{
-				"BOOL_VAL": "invalid",
-			},
-			config: &struct {
-				BoolVal bool `env:"BOOL_VAL"`
-			}{},
-			errorContains: "Failed to parse bool",
-		},
-	}
+		config := &struct {
+			UintVal uint `env:"UINT_VAL"`
+		}{}
+		err := gonfiguration.Parse(config)
+		require.Error(t, err)
+	})
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			defer gonfiguration.Reset()
+	t.Run("invalid float", func(t *testing.T) {
+		defer gonfiguration.Reset()
+		t.Setenv("FLOAT_VAL", "invalid")
 
-			for key, value := range tc.envVars {
-				t.Setenv(key, value)
-			}
+		config := &struct {
+			FloatVal float64 `env:"FLOAT_VAL"`
+		}{}
+		err := gonfiguration.Parse(config)
+		require.Error(t, err)
+	})
 
-			err := gonfiguration.Parse(tc.config)
-			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.errorContains)
-		})
-	}
+	t.Run("invalid bool", func(t *testing.T) {
+		defer gonfiguration.Reset()
+		t.Setenv("BOOL_VAL", "invalid")
+
+		config := &struct {
+			BoolVal bool `env:"BOOL_VAL"`
+		}{}
+		err := gonfiguration.Parse(config)
+		require.Error(t, err)
+	})
 }
 
 func TestGetAllValuesWithEmptyState(t *testing.T) {
@@ -403,6 +387,14 @@ func TestGetAllValuesWithDefaultsAndEnvVars(t *testing.T) {
 	require.Equal(t, "env_overrides_default", allValues["SHARED_KEY"])
 }
 
+func TestParseNilDestination(t *testing.T) {
+	defer gonfiguration.Reset()
+
+	err := gonfiguration.Parse(nil)
+	require.Error(t, err)
+	require.ErrorIs(t, err, gonfiguration.ErrNilDestination)
+}
+
 func TestDefaultValueTypeMismatch(t *testing.T) {
 	defer gonfiguration.Reset()
 
@@ -415,7 +407,7 @@ func TestDefaultValueTypeMismatch(t *testing.T) {
 	config := &MismatchConfig{}
 	err := gonfiguration.Parse(config)
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "Default value type mismatch")
+	require.ErrorIs(t, err, gonfiguration.ErrDefaultTypeMismatch)
 }
 
 func TestInvalidEnvVariable(t *testing.T) {
@@ -684,5 +676,108 @@ func TestConcurrentAccess(t *testing.T) {
 		}
 
 		wg.Wait()
+	})
+}
+
+func TestRequiredField(t *testing.T) {
+	type RequiredConfig struct {
+		Name     string `env:"NAME,required"`
+		Optional string `env:"OPTIONAL"`
+	}
+
+	t.Run("required field set via env var", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		t.Setenv("NAME", "test-name")
+
+		cfg := RequiredConfig{}
+		err := gonfiguration.Parse(&cfg)
+		require.NoError(t, err)
+		require.Equal(t, "test-name", cfg.Name)
+	})
+
+	t.Run("required field set via default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		gonfiguration.SetDefault("NAME", "default-name")
+
+		cfg := RequiredConfig{}
+		err := gonfiguration.Parse(&cfg)
+		require.NoError(t, err)
+		require.Equal(t, "default-name", cfg.Name)
+	})
+
+	t.Run("required field not set errors", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		cfg := RequiredConfig{}
+		err := gonfiguration.Parse(&cfg)
+		require.Error(t, err)
+		require.ErrorIs(t, err, gonfiguration.ErrRequiredFieldNotSet)
+	})
+
+	t.Run("required with space in tag", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type SpacyConfig struct {
+			Port int `env:"PORT, required"`
+		}
+
+		cfg := SpacyConfig{}
+		err := gonfiguration.Parse(&cfg)
+		require.Error(t, err)
+		require.ErrorIs(t, err, gonfiguration.ErrRequiredFieldNotSet)
+	})
+
+	t.Run("required field with space before comma", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type SpaceBeforeConfig struct {
+			Host string `env:"HOST ,required"`
+		}
+
+		t.Setenv("HOST", "localhost")
+
+		cfg := SpaceBeforeConfig{}
+		err := gonfiguration.Parse(&cfg)
+		require.NoError(t, err)
+		require.Equal(t, "localhost", cfg.Host)
+	})
+
+	t.Run("env var overrides default for required field", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		gonfiguration.SetDefault("NAME", "default-name")
+		t.Setenv("NAME", "env-name")
+
+		cfg := RequiredConfig{}
+		err := gonfiguration.Parse(&cfg)
+		require.NoError(t, err)
+		require.Equal(t, "env-name", cfg.Name)
+	})
+}
+
+func TestMustParse(t *testing.T) {
+	type Config struct {
+		Name string `env:"NAME"`
+	}
+
+	t.Run("success", func(t *testing.T) {
+		defer gonfiguration.Reset()
+		t.Setenv("NAME", "test")
+
+		cfg := Config{}
+		require.NotPanics(t, func() {
+			gonfiguration.MustParse(&cfg)
+		})
+		require.Equal(t, "test", cfg.Name)
+	})
+
+	t.Run("panics on error", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		require.Panics(t, func() {
+			gonfiguration.MustParse(nil)
+		})
 	})
 }

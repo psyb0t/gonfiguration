@@ -14,52 +14,30 @@ func TestParseDstFields(t *testing.T) {
 		IntField    int    `env:"INT_FIELD"`
 	}
 
-	tests := []struct {
-		name          string
-		envVars       map[string]string
-		expected      EnvTestStruct
-		expectError   bool
-		errorContains string
-	}{
-		{
-			name: "all fields",
-			envVars: map[string]string{
-				"STRING_FIELD": "test",
-				"INT_FIELD":    "42",
-			},
-			expected: EnvTestStruct{
-				StringField: "test",
-				IntField:    42,
-			},
-			expectError: false,
-		},
-		{
-			name: "wrong int format",
-			envVars: map[string]string{
-				"INT_FIELD": "not_an_int",
-			},
-			expectError:   true,
-			errorContains: "Failed to parse int",
-		},
-	}
+	t.Run("all fields", func(t *testing.T) {
+		envVars := map[string]string{
+			"STRING_FIELD": "test",
+			"INT_FIELD":    "42",
+		}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			dst := EnvTestStruct{}
-			err := parseDstFields(reflect.ValueOf(&dst).Elem(), tt.envVars)
+		dst := EnvTestStruct{}
+		err := parseDstFields(reflect.ValueOf(&dst).Elem(), envVars)
 
-			if tt.expectError {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tt.errorContains)
+		require.NoError(t, err)
+		require.Equal(t, "test", dst.StringField)
+		require.Equal(t, 42, dst.IntField)
+	})
 
-				return
-			}
+	t.Run("wrong int format", func(t *testing.T) {
+		envVars := map[string]string{
+			"INT_FIELD": "not_an_int",
+		}
 
-			require.NoError(t, err)
-			require.Equal(t, tt.expected.StringField, dst.StringField)
-			require.Equal(t, tt.expected.IntField, dst.IntField)
-		})
-	}
+		dst := EnvTestStruct{}
+		err := parseDstFields(reflect.ValueOf(&dst).Elem(), envVars)
+
+		require.Error(t, err)
+	})
 }
 
 func TestUnsupportedFieldType(t *testing.T) {
@@ -73,19 +51,19 @@ func TestUnsupportedFieldType(t *testing.T) {
 
 	dst := UnsupportedStruct{}
 	err := parseDstFields(reflect.ValueOf(&dst).Elem(), envVars)
-	
+
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "Type not supported")
+	require.ErrorIs(t, err, ErrUnsupportedFieldType)
 }
 
 func TestSetEnvVarValueUnsupportedType(t *testing.T) {
 	envVal := "test_value"
-	
+
 	mapValue := reflect.ValueOf(make(map[string]string))
 	err := setEnvVarValue(mapValue, envVal)
-	
+
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "Unsupported field type")
+	require.ErrorIs(t, err, ErrUnsupportedFieldType)
 }
 
 func TestIsSupportedType(t *testing.T) {
@@ -104,8 +82,8 @@ func TestIsSupportedType(t *testing.T) {
 		reflect.ValueOf(float32(0)),
 		reflect.ValueOf(float64(0)),
 		reflect.ValueOf(false),
-		reflect.ValueOf(time.Duration(0)), // Add time.Duration test
-		reflect.ValueOf([]string{}),       // Add []string test
+		reflect.ValueOf(time.Duration(0)),
+		reflect.ValueOf([]string{}),
 	}
 
 	for _, val := range supportedTypes {
