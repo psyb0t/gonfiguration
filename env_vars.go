@@ -15,7 +15,7 @@ func GetEnvVars() map[string]string {
 	return gonfig.getEnvVars()
 }
 
-func (g *gonfiguration) setEnvVar(key string, val string) {
+func (g *gonfiguration) setEnvVar(key, val string) {
 	g.Lock()
 	defer g.Unlock()
 

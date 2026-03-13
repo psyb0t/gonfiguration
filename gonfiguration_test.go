@@ -751,6 +751,188 @@ func TestRequiredField(t *testing.T) {
 	})
 }
 
+func TestDefaultTag(t *testing.T) {
+	t.Run("string default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Name string `env:"NAME" default:"fallback"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, "fallback", cfg.Name)
+	})
+
+	t.Run("int default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Port int `env:"PORT" default:"8080"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, 8080, cfg.Port)
+	})
+
+	t.Run("bool default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Debug bool `env:"DEBUG" default:"true"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.True(t, cfg.Debug)
+	})
+
+	t.Run("float default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Rate float64 `env:"RATE" default:"3.14"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.InDelta(t, 3.14, cfg.Rate, 0.001)
+	})
+
+	t.Run("duration default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Timeout time.Duration `env:"TIMEOUT" default:"5m"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, 5*time.Minute, cfg.Timeout)
+	})
+
+	t.Run("uint default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			MaxConn uint `env:"MAX_CONN" default:"100"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, uint(100), cfg.MaxConn)
+	})
+
+	t.Run("string slice default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Tags []string `env:"TAGS" default:"a,b,c"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, []string{"a", "b", "c"}, cfg.Tags)
+	})
+
+	t.Run("env var overrides tag default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Name string `env:"NAME" default:"fallback"`
+		}
+
+		t.Setenv("NAME", "from-env")
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, "from-env", cfg.Name)
+	})
+
+	t.Run("programmatic default overrides tag default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Name string `env:"NAME" default:"tag-default"`
+		}
+
+		gonfiguration.SetDefault("NAME", "programmatic-default")
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, "programmatic-default", cfg.Name)
+	})
+
+	t.Run("env var overrides both defaults", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Name string `env:"NAME" default:"tag-default"`
+		}
+
+		gonfiguration.SetDefault("NAME", "programmatic-default")
+		t.Setenv("NAME", "env-value")
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, "env-value", cfg.Name)
+	})
+
+	t.Run("tag default satisfies required", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Name string `env:"NAME,required" default:"fallback"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, "fallback", cfg.Name)
+	})
+
+	t.Run("invalid tag default value", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Port int `env:"PORT" default:"not-a-number"`
+		}
+
+		cfg := Config{}
+		err := gonfiguration.Parse(&cfg)
+		require.Error(t, err)
+	})
+
+	t.Run("no default tag means no default", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			Name     string `env:"NAME"`
+			Optional string `env:"OPTIONAL"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, "", cfg.Name)
+	})
+
+	t.Run("multiple fields with defaults", func(t *testing.T) {
+		defer gonfiguration.Reset()
+
+		type Config struct {
+			FetchInterval string `env:"NEWS_FETCH_INTERVAL" default:"5m"`
+			MaxArticles   int    `env:"NEWS_MAX_ARTICLES" default:"100"`
+			Debug         bool   `env:"DEBUG" default:"false"`
+		}
+
+		cfg := Config{}
+		require.NoError(t, gonfiguration.Parse(&cfg))
+		require.Equal(t, "5m", cfg.FetchInterval)
+		require.Equal(t, 100, cfg.MaxArticles)
+		require.False(t, cfg.Debug)
+	})
+}
+
 func TestMustParse(t *testing.T) {
 	type Config struct {
 		Name string `env:"NAME"`
