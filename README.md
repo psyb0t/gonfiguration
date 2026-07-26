@@ -1,5 +1,8 @@
 # gonfiguration 🔧
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/psyb0t/gonfiguration.svg)](https://pkg.go.dev/github.com/psyb0t/gonfiguration)
+[![CI](https://img.shields.io/github/actions/workflow/status/psyb0t/gonfiguration/pipeline.yml?branch=master)](https://github.com/psyb0t/gonfiguration/actions/workflows/pipeline.yml)
+
 A no-bullshit, thread-safe configuration library for Go that doesn't make you wanna punch your monitor. Tired of writing the same boring-ass env var parsing shit over and over? This badass package's got your back with reflection magic that actually works without making you cry.
 
 ## What This Beast Can Do
