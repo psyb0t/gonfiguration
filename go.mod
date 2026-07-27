@@ -2,7 +2,7 @@ module github.com/psyb0t/gonfiguration
 
 go 1.25
 
-require github.com/stretchr/testify v1.10.0
+require github.com/stretchr/testify v1.11.1
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect
