@@ -2,6 +2,10 @@
 
 All notable changes per release. Versions follow [semver](https://semver.org).
 
+## v1.5.2 — 2026-07-27
+
+- Bump `github.com/stretchr/testify` 1.10.0 → 1.11.1 (test dependency).
+
 ## v1.5.1 — 2026-07-26
 
 README badges + repo housekeeping.
