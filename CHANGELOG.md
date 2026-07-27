@@ -2,6 +2,18 @@
 
 All notable changes per release. Versions follow [semver](https://semver.org).
 
+## v1.5.4 — 2026-07-27
+
+Go 1.26 + lint tooling (`modernize` → built-in `go fix`).
+
+- Bumped the `go` directive to 1.26 (`go.mod` + CI).
+- `make lint` / `make lint-fix` now use Go 1.26's built-in `go fix` (`-diff`
+  check in `lint`, apply in `lint-fix`) instead of the `modernize` analyzer, and
+  the `modernize` tool directive is dropped from `go.mod`.
+- `go fix` modernized one deprecated stdlib reference: `reflect.Ptr` →
+  `reflect.Pointer` in `gonfiguration.go` (`reflect.Ptr` is a deprecated alias for
+  the same constant — no behavior change).
+
 ## v1.5.3 — 2026-07-27
 
 Self-hosted README badges.

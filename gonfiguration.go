@@ -320,7 +320,7 @@ func getDstStructValue(dst any) (reflect.Value, error) {
 	}
 
 	val := reflect.ValueOf(dst)
-	if val.Kind() != reflect.Ptr {
+	if val.Kind() != reflect.Pointer {
 		return reflect.Value{}, ErrTargetNotPointer
 	}
 
