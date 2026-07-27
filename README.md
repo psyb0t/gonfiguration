@@ -1,7 +1,10 @@
 # gonfiguration 🔧
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/psyb0t/gonfiguration.svg)](https://pkg.go.dev/github.com/psyb0t/gonfiguration)
-[![CI](https://img.shields.io/github/actions/workflow/status/psyb0t/gonfiguration/pipeline.yml?branch=master)](https://github.com/psyb0t/gonfiguration/actions/workflows/pipeline.yml)
+[![CI](https://github.com/psyb0t/gonfiguration/actions/workflows/pipeline.yml/badge.svg?branch=master)](https://github.com/psyb0t/gonfiguration/actions/workflows/pipeline.yml)
+[![coverage](https://raw.githubusercontent.com/psyb0t/gonfiguration/badges/coverage.svg)](https://github.com/psyb0t/gonfiguration/actions/workflows/pipeline.yml)
+[![version](https://raw.githubusercontent.com/psyb0t/gonfiguration/badges/version.svg)](https://github.com/psyb0t/gonfiguration/tags)
+[![license](https://raw.githubusercontent.com/psyb0t/gonfiguration/badges/license.svg)](LICENSE)
 
 A no-bullshit, thread-safe configuration library for Go that doesn't make you wanna punch your monitor. Tired of writing the same boring-ass env var parsing shit over and over? This badass package's got your back with reflection magic that actually works without making you cry.
 
