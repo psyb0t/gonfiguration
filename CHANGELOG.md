@@ -2,6 +2,18 @@
 
 All notable changes per release. Versions follow [semver](https://semver.org).
 
+## v1.6.1 — 2026-07-31
+
+CI only, no library change.
+
+- Restores a green pipeline and the GitHub Release artifact. The shared Go
+  workflow had gained a codegen-drift gate that defaulted to running
+  `make generate` and failing if the tree moved afterwards. This repo generates
+  nothing and has no such target, so that job failed on `v1.6.0` and the release
+  step, which depends on it, was skipped along with it. The gate is now opt-in
+  upstream and stays off here. The `v1.6.0` tag itself is fine and `go get`
+  resolves it normally.
+
 ## v1.6.0 — 2026-07-31
 
 Errors now carry the file, line and function they came from.
