@@ -26,7 +26,7 @@ This ain't your granddad's config parser. Here's what makes this package fucking
 - **Thread-Safe**: Won't shit the bed under concurrent load
 - **Default Values**: Set fallbacks via struct tags or programmatically so your app doesn't break when someone forgets to set an env var
 - **Required Fields**: Mark fields as required and get errors when they're missing
-- **Zero Dependencies**: Just stdlib, no external packages because we're not monsters
+- **Errors That Tell You Where**: Every error carries the file, line and function it came from via [ctxerrors](https://github.com/psyb0t/ctxerrors), so you're not grepping logs wondering which of six struct fields blew up
 - **Reflection-Based**: Uses Go's reflection to automagically map env vars to struct fields
 - **Type Safety**: Validates types and gives you proper error messages instead of cryptic bullshit
 
@@ -220,20 +220,30 @@ if errors.Is(err, gonfiguration.ErrRequiredFieldNotSet) {
 
 // Invalid struct (not a pointer)
 err := gonfiguration.Parse(cfg) // Missing &
-// Error: "destination must be a pointer"
+// invalid destination: destination must be a pointer
+//   [gonfiguration.go:40 in gonfiguration.Parse]
 
 // Required field not set
 type Config struct {
     APIKey string `env:"API_KEY,required"`
 }
 err := gonfiguration.Parse(&Config{})
-// Error: "required field not set"
+// failed to parse fields: failed to set field value: field API_KEY: required field not set
+//   [gonfiguration.go:169 in gonfiguration.fillFieldValue]
+//   [gonfiguration.go:112 in gonfiguration.parseDstFields]
+//   [gonfiguration.go:44 in gonfiguration.Parse]
 
 // Invalid env var value
 os.Setenv("PORT", "not-a-number")
 err := gonfiguration.Parse(&cfg)
-// Error: "failed to parse int: ..."
+// failed to parse fields: failed to set field value: failed to parse int:
+// strconv.ParseInt: parsing "not-a-number": invalid syntax
+//   [gonfiguration.go:238 in gonfiguration.setInt]
+//   [gonfiguration.go:112 in gonfiguration.parseDstFields]
+//   [gonfiguration.go:44 in gonfiguration.Parse]
 ```
+
+Every error carries the file, line and function of each hop it was wrapped at, so a failure names the exact field and the exact setter that rejected it rather than making you guess which of six struct tags is wrong. `errors.Is()` still matches the sentinels through all of it.
 
 ## Thread Safety (Because Concurrency Is Hard)
 

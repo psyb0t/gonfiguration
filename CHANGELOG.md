@@ -2,6 +2,30 @@
 
 All notable changes per release. Versions follow [semver](https://semver.org).
 
+## v1.6.0 — 2026-07-31
+
+Errors now carry the file, line and function they came from.
+
+- Every error is built with [ctxerrors](https://github.com/psyb0t/ctxerrors)
+  instead of `fmt.Errorf`, across `Parse`, the field walker and every type
+  setter. A parse failure now names the exact field and the exact setter that
+  rejected it, along with each hop it was wrapped at, rather than a bare
+  message you have to trace back by hand:
+
+  ```
+  failed to parse fields: failed to set field value: field API_KEY: required field not set
+    [gonfiguration.go:169 in fillFieldValue]
+    [gonfiguration.go:112 in parseDstFields]
+    [gonfiguration.go:44 in Parse]
+  ```
+
+- The exported sentinels in `errors.go` are unchanged and still declared with
+  `errors.New`, so `errors.Is(err, gonfiguration.ErrRequiredFieldNotSet)` and
+  friends match exactly as before, through the added wrapping.
+- **No longer dependency-free.** `github.com/psyb0t/ctxerrors` is now a direct
+  dependency, replacing the previous stdlib-only guarantee. It is a small
+  package with no dependencies of its own beyond the standard library.
+
 ## v1.5.4 — 2026-07-27
 
 Go 1.26 + lint tooling (`modernize` → built-in `go fix`).
