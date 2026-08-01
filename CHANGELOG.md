@@ -2,6 +2,27 @@
 
 All notable changes per release. Versions follow [semver](https://semver.org).
 
+## v1.6.2 — 2026-08-01
+
+Repository infrastructure only, no library change.
+
+- Every push now mirrors the repo to GitLab and Codeberg, so the source stays
+  fetchable if GitHub is unavailable. Gitee is wired but left off — it binds
+  repo creation to a mobile number and silently creates the repo private
+  without one.
+- Pushes to the default branch and every tag are archived to the Wayback
+  Machine and Software Heritage, through the authenticated Save Page Now API,
+  with README outlinks captured too. Feature-branch pushes are skipped because
+  the archive is rate-limited.
+- Issues filed on the Codeberg and GitLab mirrors are pulled back into GitHub
+  every six hours, so a bug reported on a mirror reaches the same tracker.
+  Scheduled runs jitter to avoid stampeding the mirrors; a manual run does not.
+- `.dockerignore` keeps the local `.telemetry/` scratch dir out of any build
+  context.
+
+The Go code, the public API and `go.mod` are untouched — `v1.6.2` is byte-for-byte
+`v1.6.1` as far as the library is concerned.
+
 ## v1.6.1 — 2026-07-31
 
 CI only, no library change.
