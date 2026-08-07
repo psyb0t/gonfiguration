@@ -3,7 +3,7 @@ module github.com/psyb0t/gonfiguration
 go 1.26
 
 require (
-	github.com/psyb0t/ctxerrors v0.4.0
+	github.com/psyb0t/ctxerrors v0.4.3
 	github.com/stretchr/testify v1.11.1
 )
 
