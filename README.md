@@ -89,7 +89,9 @@ func main() {
 }
 ```
 
-## Complete API Reference
+## API Reference
+
+Functions below; the sentinel errors are listed in [Error Handling](#error-handling-when-shit-goes-wrong).
 
 ### Core Functions
 

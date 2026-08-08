@@ -2,6 +2,15 @@
 
 All notable changes per release. Versions follow [semver](https://semver.org).
 
+## v1.6.4 — 2026-08-08
+
+Documentation. No code change.
+
+- The section headed "Complete API Reference" documents the eight exported
+  functions but not the sentinel errors, which live under Error Handling. It is
+  now "API Reference" and points at where the sentinels are, so the heading no
+  longer promises more than the section delivers.
+
 ## v1.6.3 — 2026-08-08
 
 Repository infrastructure only, no library change.
