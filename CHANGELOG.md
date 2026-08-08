@@ -2,6 +2,30 @@
 
 All notable changes per release. Versions follow [semver](https://semver.org).
 
+## v1.6.3 — 2026-08-08
+
+Repository infrastructure only, no library change.
+
+- Added the imported-by badge: a count of the public packages importing this
+  module, linking to `importers.md` on the `badges` branch — the importing
+  repositories, grouped, package counts descending, and flagged when the owner
+  differs from this repo's.
+- It measures **blast radius, not adoption**. The distinction matters here
+  because this library has no stars and is nonetheless imported by more packages
+  than anything else in the fleet — nobody stars a config parser, they just
+  import it. The count is what tells you how much breaks if an exported name
+  moves; the external mark is what tells you whether any of it is someone else's
+  problem.
+- Refreshed weekly rather than daily. pkg.go.dev's crawl lags publication by
+  days, so a daily run would re-derive an unchanged number six extra times a
+  week, each dragging the full test suite along because the badges job needs the
+  coverage artifact. The whole pipeline runs, not a badges-only job: the badge
+  publisher republishes only what a run produced, so a badge-only refresh would
+  delete the coverage, version and license badges.
+- The cron slot is derived from a hash of the repository name rather than
+  chosen. GitHub cron has no randomness, and its scheduler sheds queued runs
+  hardest at the round times a human would pick.
+
 ## v1.6.2 — 2026-08-01
 
 Repository infrastructure only, no library change.
