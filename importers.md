@@ -1,6 +1,6 @@
 # Imported by
 
-`github.com/psyb0t/gonfiguration` is imported by **23 package(s)**.
+`github.com/psyb0t/gonfiguration` is imported by **22 package(s)**.
 
 Generated from [pkg.go.dev](https://pkg.go.dev/github.com/psyb0t/gonfiguration?tab=importedby). Lists only PUBLIC packages that
 pkg.go.dev has crawled -- private and uncrawled importers are invisible here,
@@ -16,6 +16,6 @@ and the crawl lags publication by days.
 | [psyb0t/servicepack](https://github.com/psyb0t/servicepack) | 2 |
 | [psyb0t/piraterf](https://github.com/psyb0t/piraterf) | 2 |
 | [psyb0t/gitrakz](https://github.com/psyb0t/gitrakz) | 2 |
-| [psyb0t/aichteeteapee](https://github.com/psyb0t/aichteeteapee) | 2 |
 | [psyb0t/logrus-configurator](https://github.com/psyb0t/logrus-configurator) | 1 |
 | [psyb0t/gorpitx](https://github.com/psyb0t/gorpitx) | 1 |
+| [psyb0t/aichteeteapee](https://github.com/psyb0t/aichteeteapee) | 1 |
