@@ -58,6 +58,8 @@ make test-coverage    # tests with a coverage profile, fails below 90%
 make docs             # build the docs site into .testing/docs-site (needs Docker)
 ```
 
+A tag push does not rerun the checks: the tag run of `pipeline.yml` waits for the `master` run of the same commit, then cuts the GitHub release from the annotated tag message. There is no version file.
+
 Run one test with `go test -race -run TestName ./...`. `pre-commit.sh` runs `make lint && make test-coverage`, the same pair CI runs.
 
 Without a local Go 1.26, run the targets in a container:

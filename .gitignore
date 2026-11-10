@@ -5,3 +5,4 @@ coverage-percent.txt
 .telemetry/
 *.local.json
 .testing/
+git-update.sh.debot
