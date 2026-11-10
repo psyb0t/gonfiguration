@@ -1,0 +1,51 @@
+title: gonfiguration
+tagline: Go structs filled from environment variables
+description: A thread-safe Go library that fills a struct from environment variables through struct tags, with defaults, required fields and errors that say where they came from.
+lang: en
+url: https://psyb0t.github.io
+baseurl: /gonfiguration
+repository: psyb0t/gonfiguration
+author: Ciprian Mandache
+
+remote_theme: just-the-docs/just-the-docs@v0.12.0
+color_scheme: mocha
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-relative-links
+  - jekyll-include-cache
+
+permalink: pretty
+
+relative_links:
+  enabled: true
+  collections: false
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+      seo:
+        type: TechArticle
+
+search:
+  heading_level: 3
+
+aux_links:
+  GitHub:
+    - https://github.com/psyb0t/gonfiguration
+aux_links_new_tab: true
+
+nav_external_links:
+  - title: Changelog
+    url: https://github.com/psyb0t/gonfiguration/blob/master/CHANGELOG.md
+
+gh_edit_link: true
+gh_edit_link_text: Edit this page on GitHub
+gh_edit_repository: https://github.com/psyb0t/gonfiguration
+gh_edit_branch: master
+gh_edit_source: docs
+gh_edit_view_mode: tree
